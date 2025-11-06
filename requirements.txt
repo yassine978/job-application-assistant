@@ -1,0 +1,32 @@
+# Core
+langchain-groq
+langchain-chroma
+langchain-community
+langchain-huggingface
+playwright
+pandas
+python-dotenv
+requests
+streamlit
+openpyxl
+scikit-learn
+psycopg2-binary
+sqlalchemy
+alembic
+
+# RAG & Vector Store
+chromadb
+sentence-transformers
+
+# Markdown & File Processing
+markdown
+mistune
+python-frontmatter
+
+# PDF Generation
+weasyprint
+pypdf2
+
+# Utilities
+beautifulsoup4
+lxml

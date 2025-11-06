@@ -1,0 +1,12 @@
+# Testing & Quality
+pytest
+pytest-cov
+pytest-asyncio
+flake8
+black
+mypy
+bandit
+
+# Development
+ipython
+jupyter
