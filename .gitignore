@@ -236,3 +236,6 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Project specification (local only)
+claude_code_spec.txt
