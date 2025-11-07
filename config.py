@@ -48,4 +48,4 @@ MAX_TOKENS = 4000
 SCRAPE_DELAY = 2  # seconds between requests
 MAX_JOBS_PER_SOURCE = 100
 
-print(f"✅ Configuration loaded. Debug mode: {DEBUG}")
+print(f"[OK] Configuration loaded. Debug mode: {DEBUG}")
