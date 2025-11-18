@@ -236,3 +236,21 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+<<<<<<< HEAD
+=======
+
+# Project specification (local only)
+claude_code_spec.txt
+.claude/
+.claude
+*.claude
+.claude_history
+.aider*
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v3/
+
+# Playwright browsers (for web scraping)
+.playwright/
+playwright-report/
+>>>>>>> cd92490 (Complete Phase 5: RAG-Enhanced Processing)
