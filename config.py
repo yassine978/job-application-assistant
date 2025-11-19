@@ -22,6 +22,8 @@ ADZUNA_API_KEY = os.getenv("ADZUNA_API_KEY", "")
 # App Settings
 DEBUG = os.getenv("DEBUG", "True").lower() == "true"
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+APP_NAME = os.getenv("APP_NAME", "Job Application Assistant")
+VERSION = os.getenv("VERSION", "1.0.0")
 
 # Paths
 GENERATED_DOCS_DIR = BASE_DIR / "generated_documents"
