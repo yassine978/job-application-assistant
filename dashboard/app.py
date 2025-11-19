@@ -621,6 +621,50 @@ def show_results_page():
                 st.session_state['selected_job_details'] = None
                 st.rerun()
 
+    # Export buttons
+    st.divider()
+    export_cols = st.columns(3)
+
+    with export_cols[0]:
+        if st.button("📥 Export to CSV", use_container_width=True):
+            try:
+                from output.csv_exporter import csv_exporter
+                csv_path = csv_exporter.export_search_results(filtered_results)
+                st.success(f"✅ Exported to: {csv_path.name}")
+                st.download_button(
+                    "⬇️ Download CSV",
+                    data=open(csv_path, 'rb').read(),
+                    file_name=csv_path.name,
+                    mime='text/csv',
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"Export failed: {e}")
+
+    with export_cols[1]:
+        if st.button("📊 Export to Excel", use_container_width=True):
+            try:
+                from output.excel_exporter import excel_exporter
+                excel_path = excel_exporter.export_simple_excel(
+                    [{'Rank': i+1, **job} for i, job in enumerate(filtered_results)],
+                    sheet_name="Job Search Results"
+                )
+                st.success(f"✅ Exported to: {excel_path.name}")
+                st.download_button(
+                    "⬇️ Download Excel",
+                    data=open(excel_path, 'rb').read(),
+                    file_name=excel_path.name,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    use_container_width=True
+                )
+            except Exception as e:
+                st.error(f"Export failed: {e}")
+
+    with export_cols[2]:
+        st.write("")  # Placeholder for future export option
+
+    st.divider()
+
     # Render job list
     render_job_list(
         jobs=filtered_results,
@@ -656,6 +700,81 @@ def show_applications_page():
     with col3:
         avg_match = sum(cv['job'].get('match_score', 0) for cv in generated_cvs) / len(generated_cvs)
         st.metric("Avg Match Score", f"{avg_match:.0f}%")
+
+    st.divider()
+
+    # Export buttons
+    export_cols = st.columns(3)
+
+    with export_cols[0]:
+        if st.button("📥 Export Applications to CSV", use_container_width=True):
+            try:
+                from output.csv_exporter import csv_exporter
+                csv_path = csv_exporter.export_applications(generated_cvs)
+                st.success(f"✅ Exported to: {csv_path.name}")
+                st.download_button(
+                    "⬇️ Download CSV",
+                    data=open(csv_path, 'rb').read(),
+                    file_name=csv_path.name,
+                    mime='text/csv',
+                    use_container_width=True,
+                    key="download_apps_csv"
+                )
+            except Exception as e:
+                st.error(f"Export failed: {e}")
+
+    with export_cols[1]:
+        if st.button("📊 Comprehensive Excel Report", use_container_width=True):
+            try:
+                from output.excel_exporter import excel_exporter
+                from database.db_manager import db_manager
+
+                # Gather all data
+                search_results = st.session_state.get('search_results', [])
+                projects = db_manager.get_user_projects(user['id'])
+
+                # Calculate project usage stats
+                project_usage = {}
+                for app in generated_cvs:
+                    for proj_id in app.get('cv', {}).get('metadata', {}).get('projects_included', []):
+                        project_usage[str(proj_id)] = project_usage.get(str(proj_id), 0) + 1
+
+                # Calculate skill counts
+                skill_counts = {}
+                for job in search_results:
+                    for skill in job.get('required_skills', []):
+                        skill_counts[skill] = skill_counts.get(skill, 0) + 1
+
+                profile = db_manager.get_profile(user['id'])
+                user_skills = profile.get('skills', []) if profile else []
+
+                excel_path = excel_exporter.export_comprehensive_report(
+                    search_results=search_results,
+                    applications=generated_cvs,
+                    projects=projects,
+                    usage_stats=project_usage,
+                    skill_counts=skill_counts,
+                    user_skills=user_skills,
+                    user_name=user['full_name']
+                )
+
+                st.success(f"✅ Comprehensive report generated: {excel_path.name}")
+                st.download_button(
+                    "⬇️ Download Excel Report",
+                    data=open(excel_path, 'rb').read(),
+                    file_name=excel_path.name,
+                    mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    use_container_width=True,
+                    key="download_apps_excel"
+                )
+            except Exception as e:
+                st.error(f"Export failed: {e}")
+                import traceback
+                with st.expander("Error Details"):
+                    st.code(traceback.format_exc())
+
+    with export_cols[2]:
+        st.write("")  # Placeholder
 
     st.divider()
 
