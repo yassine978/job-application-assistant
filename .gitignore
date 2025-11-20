@@ -240,3 +240,11 @@ htmlcov/
 # Playwright browsers (for web scraping)
 .playwright/
 playwright-report/
+
+.claude
+.claude_config.json
+.claude_data/
+.claude_logs/
+.claude_sessions/
+.claude_temp/
+claude_code_spec.txt
