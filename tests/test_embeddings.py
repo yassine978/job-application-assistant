@@ -1,5 +1,9 @@
 """Test embedding generation."""
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from ai_generation.embeddings.embedding_generator import embedding_generator
 import numpy as np
 
@@ -14,7 +18,7 @@ def test_embedding_generator():
         embedding_generator.initialize()
         
         # Test 1: Single text embedding
-        print("\n📝 Test 1: Single text embedding")
+        print("\n[*] Test 1: Single text embedding")
         text = "Python developer with machine learning experience"
         embedding = embedding_generator.embed_text(text)
         
@@ -23,10 +27,10 @@ def test_embedding_generator():
         print(f"  First 5 values: {embedding[:5]}")
         
         assert len(embedding) == 384, f"Expected 384 dimensions, got {len(embedding)}"
-        print("  ✅ Single embedding works")
+        print("  [OK] Single embedding works")
         
         # Test 2: Batch embeddings
-        print("\n📝 Test 2: Batch embeddings")
+        print("\n[*] Test 2: Batch embeddings")
         texts = [
             "Python developer",
             "Machine learning engineer",
@@ -39,10 +43,10 @@ def test_embedding_generator():
         print(f"  Each dimension: {len(embeddings[0])}")
         
         assert len(embeddings) == len(texts), "Mismatch in batch size"
-        print("  ✅ Batch embedding works")
+        print("  [OK] Batch embedding works")
         
         # Test 3: Profile embedding
-        print("\n📝 Test 3: Profile embedding")
+        print("\n[*] Test 3: Profile embedding")
         profile_data = {
             'skills': ['Python', 'TensorFlow', 'SQL'],
             'experience': [{
@@ -61,10 +65,10 @@ def test_embedding_generator():
         print(f"  Embedding dimension: {len(profile_embedding)}")
         
         assert len(profile_embedding) == 384, "Profile embedding dimension error"
-        print("  ✅ Profile embedding works")
+        print("  [OK] Profile embedding works")
         
         # Test 4: Job embedding
-        print("\n📝 Test 4: Job embedding")
+        print("\n[*] Test 4: Job embedding")
         job_data = {
             'job_title': 'Senior Python Developer',
             'company_name': 'Google',
@@ -78,10 +82,10 @@ def test_embedding_generator():
         print(f"  Embedding dimension: {len(job_embedding)}")
         
         assert len(job_embedding) == 384, "Job embedding dimension error"
-        print("  ✅ Job embedding works")
+        print("  [OK] Job embedding works")
         
         # Test 5: Project embedding
-        print("\n📝 Test 5: Project embedding")
+        print("\n[*] Test 5: Project embedding")
         project_data = {
             'title': 'E-Commerce Platform',
             'description': 'Built a full-stack e-commerce application',
@@ -94,10 +98,10 @@ def test_embedding_generator():
         print(f"  Embedding dimension: {len(project_embedding)}")
         
         assert len(project_embedding) == 384, "Project embedding dimension error"
-        print("  ✅ Project embedding works")
+        print("  [OK] Project embedding works")
         
         # Test 6: Similarity calculation
-        print("\n📝 Test 6: Similarity calculation")
+        print("\n[*] Test 6: Similarity calculation")
         text1 = "Python machine learning"
         text2 = "Python ML engineer"
         text3 = "Frontend JavaScript developer"
@@ -113,10 +117,10 @@ def test_embedding_generator():
         print(f"  Similarity('Python ML', 'Frontend JS'): {sim_13:.3f}")
         
         assert sim_12 > sim_13, "Similar texts should have higher similarity"
-        print("  ✅ Similarity calculation works")
-        
-        print("\n✅ All embedding tests passed!")
-        print(f"\n📊 Model Info:")
+        print("  [OK] Similarity calculation works")
+
+        print("\n[OK] All embedding tests passed!")
+        print(f"\n[*] Model Info:")
         print(f"   Model: {embedding_generator.model_name}")
         print(f"   Dimension: {embedding_generator.dimension}")
         print(f"   Ready for semantic search!")
@@ -124,10 +128,26 @@ def test_embedding_generator():
         return True
         
     except Exception as e:
-        print(f"\n❌ Embedding test failed: {e}")
+        print(f"\n[ERROR] Embedding test failed: {e}")
         import traceback
         traceback.print_exc()
         return False
 
+def run_all_tests():
+    """Run all embedding tests."""
+    tests = [
+        test_embedding_generator
+    ]
+
+    passed = sum(1 for test in tests if test())
+    failed = len(tests) - passed
+
+    print(f"\n[OK] Passed: {passed}/{len(tests)}")
+    print(f"[X] Failed: {failed}/{len(tests)}")
+
+    return failed == 0
+
 if __name__ == "__main__":
-    test_embedding_generator()
+    import sys
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

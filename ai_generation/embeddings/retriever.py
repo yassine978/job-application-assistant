@@ -16,7 +16,7 @@ class Retriever:
         """Initialize dependencies."""
         self.vector_store.initialize()
         self.db_manager.initialize()
-        print("✅ Retriever initialized")
+        print("[OK] Retriever initialized")
     
     def get_profile_context(self, user_id: str) -> str:
         """Get user profile as formatted text.

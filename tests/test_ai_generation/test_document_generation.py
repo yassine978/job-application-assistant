@@ -1,7 +1,12 @@
 """Test CV and cover letter generation."""
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from ai_generation import cv_generator, cover_letter_generator, rag_pipeline
-from ai_generation.rag import project_selector, page_optimizer
+from ai_generation.rag.project_selector import project_selector
+from ai_generation.rag.page_optimizer import page_optimizer
 from database.db_manager import db_manager
 from ai_generation.embeddings.vector_store import vector_store
 import uuid

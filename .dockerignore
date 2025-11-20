@@ -1,0 +1,84 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Environment
+.env
+.env.*
+*.env
+
+# Logs
+logs/
+*.log
+
+# Generated files
+generated_documents/
+chroma_db/
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Test files
+tests/
+run_tests.py
+pytest.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp

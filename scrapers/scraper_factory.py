@@ -79,10 +79,10 @@ class ScraperFactory:
                 )
 
                 all_jobs.extend(jobs)
-                print(f"✓ {len(jobs)} jobs from {source_name}")
+                print(f"[OK] {len(jobs)} jobs from {source_name}")
 
             except Exception as e:
-                print(f"✗ Error with {source_name}: {e}")
+                print(f"[ERROR] Error with {source_name}: {e}")
                 continue
 
         print(f"\n--- COLLECTED {len(all_jobs)} TOTAL JOBS ---")

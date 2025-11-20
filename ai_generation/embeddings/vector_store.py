@@ -16,7 +16,7 @@ class VectorStore:
         """Initialize both vector DB and embedding generator."""
         self.vector_db.initialize()
         self.embedding_gen.initialize()
-        print("✅ Vector store initialized")
+        print("[OK] Vector store initialized")
     
     def add_profile(
         self, 
@@ -156,7 +156,7 @@ class VectorStore:
             profile_embedding = profile_results['embeddings'][0]
             
         except Exception as e:
-            print(f"❌ Error getting profile embedding: {e}")
+            print(f"[ERROR] Error getting profile embedding: {e}")
             return []
         
         # Find similar jobs
@@ -212,7 +212,7 @@ class VectorStore:
             job_embedding = job_results['embeddings'][0]
             
         except Exception as e:
-            print(f"❌ Error getting job embedding: {e}")
+            print(f"[ERROR] Error getting job embedding: {e}")
             return []
         
         # Find relevant projects for this user

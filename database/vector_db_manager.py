@@ -35,7 +35,7 @@ class VectorDBManager:
         self._create_collections()
         
         self._initialized = True
-        print(f"✅ Vector database initialized: {self.persist_directory}")
+        print(f"[OK] Vector database initialized: {self.persist_directory}")
     
     def _create_collections(self):
         """Create all required collections."""
@@ -58,9 +58,9 @@ class VectorDBManager:
                     }
                 )
                 self.collections[name] = collection
-                print(f"  ✓ Collection '{name}' ready")
+                print(f"  [OK] Collection '{name}' ready")
             except Exception as e:
-                print(f"  ✗ Error creating collection '{name}': {e}")
+                print(f"  [ERROR] Error creating collection '{name}': {e}")
     
     def add_documents(
         self,
@@ -165,9 +165,9 @@ class VectorDBManager:
             self.client.delete_collection(name=collection_name)
             if collection_name in self.collections:
                 del self.collections[collection_name]
-            print(f"✅ Collection '{collection_name}' deleted")
+            print(f"[OK] Collection '{collection_name}' deleted")
         except Exception as e:
-            print(f"❌ Error deleting collection '{collection_name}': {e}")
+            print(f"[ERROR] Error deleting collection '{collection_name}': {e}")
     
     def reset_all_collections(self):
         """Delete and recreate all collections (use with caution!)."""
@@ -178,7 +178,7 @@ class VectorDBManager:
             self.delete_collection(collection_name)
         
         self._create_collections()
-        print("✅ All collections reset")
+        print("[OK] All collections reset")
 
 
 # Global vector database instance

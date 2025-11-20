@@ -22,7 +22,7 @@ class DatabaseManager:
         self.db.initialize()
         self.db.create_tables()
         self.vector_db.initialize()
-        print("✅ Database manager initialized")
+        print("[OK] Database manager initialized")
     
     # User operations
     def create_user(self, user_data: Dict) -> str:
@@ -48,7 +48,7 @@ class DatabaseManager:
             session.commit()
             user_id = str(user.id)
             
-            print(f"✅ User created: {user.email}")
+            print(f"[OK] User created: {user.email}")
             return user_id
     
     def get_user_by_email(self, email: str) -> Optional[User]:
@@ -87,7 +87,7 @@ class DatabaseManager:
             session.commit()
             profile_id = str(profile.id)
             
-            print(f"✅ Profile created for user: {user_id}")
+            print(f"[OK] Profile created for user: {user_id}")
             return profile_id
     
     # Project operations
@@ -116,7 +116,7 @@ class DatabaseManager:
             session.commit()
             project_id = str(project.id)
             
-            print(f"✅ Project created: {project.title}")
+            print(f"[OK] Project created: {project.title}")
             return project_id
     
     # Job operations

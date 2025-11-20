@@ -1,5 +1,9 @@
 """Test RAG-based job ranking."""
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+
 from processing.rag_ranker import rag_ranker
 from processing.filter_engine import filter_engine
 from processing.parser import job_parser
@@ -73,6 +77,7 @@ def test_filter_engine():
             'company_name': 'AI Startup',
             'location': 'Remote',
             'job_type': 'Full-time',
+            'description': 'Looking for Python and TensorFlow expertise',
             'required_skills': ['Python', 'TensorFlow'],
             'posting_date': datetime.now() - timedelta(days=15),
             'language': 'en'
@@ -95,10 +100,10 @@ def test_filter_engine():
     print(f"  After keyword filter (Python): {len(filtered)} jobs")
     assert len(filtered) == 2, "Should find 2 Python jobs"
 
-    # Test 2: Filter by location
+    # Test 2: Filter by location (includes remote jobs)
     filtered = filter_engine.filter_jobs(jobs, location='Paris')
     print(f"  After location filter (Paris): {len(filtered)} jobs")
-    assert len(filtered) == 1, "Should find 1 Paris job"
+    assert len(filtered) == 2, "Should find 1 Paris job + 1 Remote job"
 
     # Test 3: Filter by job type
     filtered = filter_engine.filter_jobs(jobs, job_types=['Full-time'])

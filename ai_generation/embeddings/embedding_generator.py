@@ -24,14 +24,14 @@ class EmbeddingGenerator:
         if self._initialized:
             return
         
-        print(f"🔄 Loading embedding model: {self.model_name}")
+        print(f"[*] Loading embedding model: {self.model_name}")
         print("   This may take a minute on first run (downloading ~90MB)...")
         
         # Load model
         self.model = SentenceTransformer(self.model_name)
         
         self._initialized = True
-        print(f"✅ Embedding model loaded: {self.model_name}")
+        print(f"[OK] Embedding model loaded: {self.model_name}")
         print(f"   Embedding dimension: {self.dimension}")
     
     def embed_text(self, text: str) -> List[float]:

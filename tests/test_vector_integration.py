@@ -1,5 +1,9 @@
 """Test complete integration: Database + Embeddings + Vector Store."""
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from database.db_manager import db_manager
 from ai_generation.embeddings.vector_store import vector_store
 from ai_generation.embeddings.retriever import retriever
@@ -13,13 +17,13 @@ def test_complete_integration():
     
     try:
         # Initialize all systems
-        print("\n🔄 Initializing systems...")
+        print("\n[*] Initializing systems...")
         db_manager.initialize()
         vector_store.initialize()
         retriever.initialize()
         
         # Create test user with unique email
-        print("\n👤 Creating test user...")
+        print("\n[*] Creating test user...")
         user_id = str(uuid.uuid4())
         test_email = f"integration_{user_id[:8]}@test.com"  # Unique email
         
@@ -39,12 +43,12 @@ def test_complete_integration():
             )
             session.add(user)
             session.commit()
-        
-        print(f"  ✅ User created: {user_id}")
-        print(f"  📧 Email: {test_email}")
+
+        print(f"  [OK] User created: {user_id}")
+        print(f"  [*] Email: {test_email}")
         
         # Create profile
-        print("\n📝 Creating profile with embedding...")
+        print("\n[*] Creating profile with embedding...")
         profile_data = {
             'skills': ['Python', 'Machine Learning', 'TensorFlow'],
             'experience': [{
@@ -63,10 +67,10 @@ def test_complete_integration():
         
         # Add profile to vector store
         chroma_id = vector_store.add_profile(user_id, profile_data)
-        print(f"  ✅ Profile embedded and stored: {chroma_id}")
+        print(f"  [OK] Profile embedded and stored: {chroma_id}")
         
         # Create project
-        print("\n🚀 Creating project with embedding...")
+        print("\n[*] Creating project with embedding...")
         project_data = {
             'title': 'ML Recommendation System',
             'description': 'Built a collaborative filtering recommender',
@@ -85,10 +89,10 @@ def test_complete_integration():
             user_id, 
             project_data
         )
-        print(f"  ✅ Project embedded and stored: {project_chroma_id}")
+        print(f"  [OK] Project embedded and stored: {project_chroma_id}")
         
         # Create job
-        print("\n💼 Creating job with embedding...")
+        print("\n[*] Creating job with embedding...")
         job_data = {
             'source': 'test',
             'job_title': 'Senior ML Engineer',
@@ -103,10 +107,10 @@ def test_complete_integration():
         
         # Add job to vector store
         job_chroma_id = vector_store.add_job(job_id, job_data)
-        print(f"  ✅ Job embedded and stored: {job_chroma_id}")
+        print(f"  [OK] Job embedded and stored: {job_chroma_id}")
         
         # Test semantic search
-        print("\n🔍 Testing semantic search...")
+        print("\n[*] Testing semantic search...")
         
         # Find similar jobs to profile
         similar_jobs = vector_store.find_similar_jobs(user_id, n_results=5)
@@ -128,7 +132,7 @@ def test_complete_integration():
             print(f"      Relevance: {proj['relevance']:.3f}")
         
         # Test retriever context
-        print("\n📄 Testing context retrieval...")
+        print("\n[*] Testing context retrieval...")
         
         profile_context = retriever.get_profile_context(user_id)
         print(f"\n  Profile context ({len(profile_context)} chars):")
@@ -157,22 +161,38 @@ def test_complete_integration():
             max_projects=2
         )
         
-        print("\n📊 Full Context Summary:")
+        print("\n[*] Full Context Summary:")
         print(f"  • Profile: {len(full_context['profile'])} chars")
         print(f"  • Job: {len(full_context['job'])} chars")
         print(f"  • Projects: {len(full_context['projects'])} chars")
         print(f"  • Total: {sum(len(v) for v in full_context.values())} chars")
         
-        print("\n✅ Complete integration test successful!")
-        print("✅ Database + Embeddings + Vector Store: All working!")
+        print("\n[OK] Complete integration test successful!")
+        print("[OK] Database + Embeddings + Vector Store: All working!")
         
         return True
         
     except Exception as e:
-        print(f"\n❌ Integration test failed: {e}")
+        print(f"\n[ERROR] Integration test failed: {e}")
         import traceback
         traceback.print_exc()
         return False
 
+def run_all_tests():
+    """Run all vector integration tests."""
+    tests = [
+        test_complete_integration
+    ]
+
+    passed = sum(1 for test in tests if test())
+    failed = len(tests) - passed
+
+    print(f"\n[OK] Passed: {passed}/{len(tests)}")
+    print(f"[X] Failed: {failed}/{len(tests)}")
+
+    return failed == 0
+
 if __name__ == "__main__":
-    test_complete_integration()
+    import sys
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

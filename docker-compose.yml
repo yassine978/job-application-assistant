@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: job-app-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-job_assistant}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - job-app-network
+
+  # Main Application (Streamlit Dashboard)
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: job-app-streamlit
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-job_assistant}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      ADZUNA_APP_ID: ${ADZUNA_APP_ID}
+      ADZUNA_API_KEY: ${ADZUNA_API_KEY}
+      DEBUG: ${DEBUG:-False}
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./generated_documents:/app/generated_documents
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - job-app-network
+    restart: unless-stopped
+
+  # Job Scraper (Optional - runs on schedule or manually)
+  scraper:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: job-app-scraper
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-job_assistant}
+      ADZUNA_APP_ID: ${ADZUNA_APP_ID}
+      ADZUNA_API_KEY: ${ADZUNA_API_KEY}
+      DEBUG: ${DEBUG:-False}
+    command: python -m scrapers.scraper_factory
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - job-app-network
+    profiles:
+      - scraper  # Only run when explicitly requested
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  job-app-network:
+    driver: bridge

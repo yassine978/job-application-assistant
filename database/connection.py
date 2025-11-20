@@ -39,7 +39,7 @@ class DatabaseConnection:
         self.SessionLocal = scoped_session(session_factory)
         
         self._initialized = True
-        print(f"✅ Database connection initialized: {self.database_url[:30]}...")
+        print(f"[OK] Database connection initialized: {self.database_url[:30]}...")
     
     def create_tables(self):
         """Create all tables in the database."""
@@ -47,7 +47,7 @@ class DatabaseConnection:
             self.initialize()
         
         Base.metadata.create_all(bind=self.engine)
-        print("✅ Database tables created successfully")
+        print("[OK] Database tables created successfully")
     
     def drop_tables(self):
         """Drop all tables (use with caution!)."""
@@ -55,7 +55,7 @@ class DatabaseConnection:
             self.initialize()
         
         Base.metadata.drop_all(bind=self.engine)
-        print("⚠️  All tables dropped")
+        print("[WARNING] All tables dropped")
     
     def get_session(self):
         """Get a new database session.
