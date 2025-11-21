@@ -33,6 +33,7 @@ services:
       ADZUNA_APP_ID: ${ADZUNA_APP_ID}
       ADZUNA_API_KEY: ${ADZUNA_API_KEY}
       DEBUG: ${DEBUG:-False}
+      PYTHONPATH: /app
     ports:
       - "8501:8501"
     volumes:
@@ -57,6 +58,7 @@ services:
       ADZUNA_APP_ID: ${ADZUNA_APP_ID}
       ADZUNA_API_KEY: ${ADZUNA_API_KEY}
       DEBUG: ${DEBUG:-False}
+      PYTHONPATH: /app
     command: python -m scrapers.scraper_factory
     volumes:
       - ./logs:/app/logs

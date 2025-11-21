@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 from datetime import datetime
 from scrapers.welcome_scraper import WelcomeToJungleScraper
 from scrapers.adzuna_client import AdzunaClient
+from scrapers.linkedin_scraper import LinkedInScraper
 from database.db_manager import db_manager
 from ai_generation.embeddings.vector_store import vector_store
 
@@ -14,8 +15,9 @@ class ScraperFactory:
     def __init__(self):
         """Initialize scraper factory."""
         self.scrapers = {
-            'welcome_to_jungle': WelcomeToJungleScraper(),
-            'adzuna': AdzunaClient()
+            'welcome': WelcomeToJungleScraper(),
+            'adzuna': AdzunaClient(),
+            'linkedin': LinkedInScraper()
         }
         self.all_jobs = []
         self.duplicates_removed = 0

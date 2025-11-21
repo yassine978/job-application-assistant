@@ -83,26 +83,33 @@ def render_job_search_form(
 
         # Source selection
         st.write("**Data Sources:**")
-        source_cols = st.columns(3)
+        source_cols = st.columns(4)
 
         with source_cols[0]:
+            use_linkedin = st.checkbox(
+                "LinkedIn",
+                value=defaults.get('use_linkedin', True),
+                help="Scrape public jobs from LinkedIn (no login)"
+            )
+
+        with source_cols[1]:
             use_wttj = st.checkbox(
                 "Welcome to the Jungle",
                 value=defaults.get('use_wttj', True),
                 help="Scrape from Welcome to the Jungle"
             )
 
-        with source_cols[1]:
+        with source_cols[2]:
             use_adzuna = st.checkbox(
                 "Adzuna API",
                 value=defaults.get('use_adzuna', True),
                 help="Fetch from Adzuna API"
             )
 
-        with source_cols[2]:
+        with source_cols[3]:
             use_cached = st.checkbox(
                 "Use Cached Jobs",
-                value=defaults.get('use_cached', True),
+                value=defaults.get('use_cached', False),
                 help="Include previously scraped jobs from database"
             )
 
@@ -116,6 +123,8 @@ def render_job_search_form(
         if submitted:
             # Build sources list
             sources = []
+            if use_linkedin:
+                sources.append('linkedin')
             if use_wttj:
                 sources.append('welcome')
             if use_adzuna:

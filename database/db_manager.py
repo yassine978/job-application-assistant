@@ -67,11 +67,11 @@ class DatabaseManager:
     # Profile operations
     def create_profile(self, user_id: str, profile_data: Dict) -> str:
         """Create user profile.
-        
+
         Args:
             user_id: User ID
             profile_data: Dictionary with profile information
-            
+
         Returns:
             Profile ID
         """
@@ -86,18 +86,63 @@ class DatabaseManager:
             session.add(profile)
             session.commit()
             profile_id = str(profile.id)
-            
+
             print(f"[OK] Profile created for user: {user_id}")
             return profile_id
+
+    def get_profile(self, user_id: str) -> Optional[UserProfile]:
+        """Get user profile by user ID.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            UserProfile object or None
+        """
+        with self.db as session:
+            profile = session.query(UserProfile).filter(
+                UserProfile.user_id == uuid.UUID(user_id)
+            ).first()
+            return profile
+
+    def update_profile(self, user_id: str, profile_data: Dict) -> bool:
+        """Update user profile.
+
+        Args:
+            user_id: User ID
+            profile_data: Dictionary with updated profile information
+
+        Returns:
+            True if updated, False otherwise
+        """
+        with self.db as session:
+            profile = session.query(UserProfile).filter(
+                UserProfile.user_id == uuid.UUID(user_id)
+            ).first()
+
+            if profile:
+                if 'skills' in profile_data:
+                    profile.skills = profile_data['skills']
+                if 'experience' in profile_data:
+                    profile.experience = profile_data['experience']
+                if 'education' in profile_data:
+                    profile.education = profile_data['education']
+                if 'languages' in profile_data:
+                    profile.languages = profile_data['languages']
+
+                session.commit()
+                print(f"[OK] Profile updated for user: {user_id}")
+                return True
+            return False
     
     # Project operations
     def create_project(self, user_id: str, project_data: Dict) -> str:
         """Create user project.
-        
+
         Args:
             user_id: User ID
             project_data: Dictionary with project information
-            
+
         Returns:
             Project ID
         """
@@ -115,9 +160,96 @@ class DatabaseManager:
             session.add(project)
             session.commit()
             project_id = str(project.id)
-            
+
             print(f"[OK] Project created: {project.title}")
             return project_id
+
+    def get_user_projects(self, user_id: str) -> List[UserProject]:
+        """Get all projects for a user.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            List of UserProject objects
+        """
+        with self.db as session:
+            projects = session.query(UserProject).filter(
+                UserProject.user_id == uuid.UUID(user_id)
+            ).all()
+            return projects
+
+    def get_project(self, project_id: str) -> Optional[UserProject]:
+        """Get a project by ID.
+
+        Args:
+            project_id: Project ID
+
+        Returns:
+            UserProject object or None
+        """
+        with self.db as session:
+            project = session.query(UserProject).filter(
+                UserProject.id == uuid.UUID(project_id)
+            ).first()
+            return project
+
+    def update_project(self, project_id: str, project_data: Dict) -> bool:
+        """Update a project.
+
+        Args:
+            project_id: Project ID
+            project_data: Dictionary with updated project information
+
+        Returns:
+            True if updated, False otherwise
+        """
+        with self.db as session:
+            project = session.query(UserProject).filter(
+                UserProject.id == uuid.UUID(project_id)
+            ).first()
+
+            if project:
+                if 'title' in project_data:
+                    project.title = project_data['title']
+                if 'description' in project_data:
+                    project.description = project_data['description']
+                if 'readme_content' in project_data:
+                    project.readme_content = project_data['readme_content']
+                if 'github_url' in project_data:
+                    project.github_url = project_data['github_url']
+                if 'demo_url' in project_data:
+                    project.demo_url = project_data['demo_url']
+                if 'technologies' in project_data:
+                    project.technologies = project_data['technologies']
+                if 'highlights' in project_data:
+                    project.highlights = project_data['highlights']
+
+                session.commit()
+                print(f"[OK] Project updated: {project.title}")
+                return True
+            return False
+
+    def delete_project(self, project_id: str) -> bool:
+        """Delete a project.
+
+        Args:
+            project_id: Project ID
+
+        Returns:
+            True if deleted, False otherwise
+        """
+        with self.db as session:
+            project = session.query(UserProject).filter(
+                UserProject.id == uuid.UUID(project_id)
+            ).first()
+
+            if project:
+                session.delete(project)
+                session.commit()
+                print(f"[OK] Project deleted: {project.title}")
+                return True
+            return False
     
     # Job operations
     def create_job(self, job_data: Dict) -> str:
@@ -151,12 +283,79 @@ class DatabaseManager:
     
     def get_all_jobs(self) -> List[Job]:
         """Get all jobs from database.
-        
+
         Returns:
             List of Job objects
         """
         with self.db as session:
             jobs = session.query(Job).all()
+            return jobs
+
+    def get_job(self, job_id: str) -> Optional[Job]:
+        """Get a job by ID.
+
+        Args:
+            job_id: Job ID
+
+        Returns:
+            Job object or None
+        """
+        with self.db as session:
+            job = session.query(Job).filter(
+                Job.id == uuid.UUID(job_id)
+            ).first()
+            return job
+
+    def search_jobs(self, query: str = None, location: str = None,
+                   job_type: str = None, limit: int = 100) -> List[Job]:
+        """Search jobs with filters.
+
+        Args:
+            query: Search query for title/company
+            location: Location filter
+            job_type: Job type filter
+            limit: Maximum number of results
+
+        Returns:
+            List of Job objects
+        """
+        with self.db as session:
+            jobs_query = session.query(Job)
+
+            if query:
+                jobs_query = jobs_query.filter(
+                    (Job.job_title.ilike(f'%{query}%')) |
+                    (Job.company_name.ilike(f'%{query}%'))
+                )
+
+            if location:
+                jobs_query = jobs_query.filter(
+                    Job.location.ilike(f'%{location}%')
+                )
+
+            if job_type:
+                jobs_query = jobs_query.filter(Job.job_type == job_type)
+
+            jobs = jobs_query.limit(limit).all()
+            return jobs
+
+    def get_recent_jobs(self, limit: int = 50, days: int = 30) -> List[Job]:
+        """Get recent jobs from the last N days.
+
+        Args:
+            limit: Maximum number of results
+            days: Number of days to look back
+
+        Returns:
+            List of Job objects
+        """
+        from datetime import datetime, timedelta
+
+        with self.db as session:
+            cutoff_date = datetime.now() - timedelta(days=days)
+            jobs = session.query(Job).filter(
+                Job.posting_date >= cutoff_date
+            ).order_by(Job.posting_date.desc()).limit(limit).all()
             return jobs
     
     def get_stats(self) -> Dict:

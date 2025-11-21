@@ -1,9 +1,10 @@
 name: Scheduled Job Scraping
 
 on:
-  schedule:
-    # Run every day at 9 AM UTC (10 AM Paris time)
-    - cron: '0 9 * * *'
+  # schedule:
+  #   # Run every day at 9 AM UTC (10 AM Paris time)
+  #   # DISABLED: Enable after configuring GitHub Secrets
+  #   - cron: '0 9 * * *'
   workflow_dispatch:  # Allow manual trigger
 
 jobs:

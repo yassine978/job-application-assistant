@@ -10,6 +10,7 @@ def render_job_card(
     rank: Optional[int] = None,
     show_actions: bool = True,
     on_generate_cv: Optional[Callable] = None,
+    on_generate_cover_letter: Optional[Callable] = None,
     on_view_details: Optional[Callable] = None
 ) -> None:
     """Render a job posting card.
@@ -128,8 +129,9 @@ def render_job_card(
                         on_generate_cv(job)
 
             with btn_cols[1]:
-                if st.button("📝 Cover Letter", key=f"cl_{job.get('id')}", use_container_width=True):
-                    st.info("Cover letter generation coming soon!")
+                if st.button("✉️ Cover Letter", key=f"cl_{job.get('id')}", use_container_width=True):
+                    if on_generate_cover_letter:
+                        on_generate_cover_letter(job)
 
             with btn_cols[2]:
                 if st.button("ℹ️ Details", key=f"details_{job.get('id')}", use_container_width=True):
@@ -144,6 +146,7 @@ def render_job_list(
     start_rank: int = 1,
     show_actions: bool = True,
     on_generate_cv: Optional[Callable] = None,
+    on_generate_cover_letter: Optional[Callable] = None,
     on_view_details: Optional[Callable] = None
 ) -> None:
     """Render a list of job cards.
@@ -153,6 +156,7 @@ def render_job_list(
         start_rank: Starting rank number
         show_actions: Whether to show action buttons
         on_generate_cv: Callback for CV generation
+        on_generate_cover_letter: Callback for cover letter generation
         on_view_details: Callback for viewing details
     """
     if not jobs:
@@ -165,6 +169,7 @@ def render_job_list(
             rank=start_rank + i,
             show_actions=show_actions,
             on_generate_cv=on_generate_cv,
+            on_generate_cover_letter=on_generate_cover_letter,
             on_view_details=on_view_details
         )
 

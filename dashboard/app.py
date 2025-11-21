@@ -205,56 +205,188 @@ def show_profile_page():
     if not profile:
         st.warning("Profile not created yet. Please complete your profile below.")
 
-        with st.form("create_profile"):
-            st.write("**Skills**")
-            skills_input = st.text_area(
-                "Enter your skills (one per line)",
-                placeholder="Python\nMachine Learning\nReact\nSQL"
-            )
+        # CV Upload Section
+        st.write("### 📄 Quick Start: Upload Your CV")
+        st.info("💡 Upload your existing CV (PDF) to automatically fill your profile!")
 
-            st.write("**Experience**")
-            exp_title = st.text_input("Job Title")
-            exp_company = st.text_input("Company")
-            exp_duration = st.text_input("Duration", placeholder="6 months (Jan 2024 - Jun 2024)")
+        uploaded_cv = st.file_uploader(
+            "Upload your CV (PDF)",
+            type=['pdf'],
+            help="We'll extract your skills, experience, and education automatically",
+            key="cv_upload"
+        )
 
-            st.write("**Education**")
-            edu_degree = st.text_input("Degree", placeholder="Master in Computer Science")
-            edu_institution = st.text_input("Institution", placeholder="University of Paris")
-            edu_year = st.number_input("Year", min_value=2000, max_value=2030, value=2024)
+        if uploaded_cv is not None:
+            with st.spinner("Parsing your CV..."):
+                try:
+                    # Save uploaded file temporarily
+                    from pathlib import Path
+                    import tempfile
 
-            st.write("**Languages**")
-            languages_input = st.text_area(
-                "Languages (one per line)",
-                placeholder="English (Fluent)\nFrench (Native)"
-            )
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                        tmp_file.write(uploaded_cv.read())
+                        tmp_path = Path(tmp_file.name)
 
-            submit = st.form_submit_button("Create Profile")
+                    # Parse CV
+                    from processing.cv_parser import cv_parser
+                    cv_parser.initialize()
+                    parsed_data = cv_parser.parse_pdf(tmp_path)
 
-            if submit:
-                # Parse inputs
-                skills = [s.strip() for s in skills_input.split('\n') if s.strip()]
-                languages = [l.strip() for l in languages_input.split('\n') if l.strip()]
+                    # Clean up temp file
+                    tmp_path.unlink()
 
-                experience = []
+                    # Pre-fill session state with parsed data
+                    if parsed_data['experience']:
+                        st.session_state['profile_experiences'] = parsed_data['experience']
+                        st.success(f"✅ Found {len(parsed_data['experience'])} work experiences!")
+
+                    if parsed_data['education']:
+                        st.session_state['profile_education'] = parsed_data['education']
+                        st.success(f"✅ Found {len(parsed_data['education'])} education entries!")
+
+                    if parsed_data['skills']:
+                        st.session_state['parsed_skills'] = '\n'.join(parsed_data['skills'])
+                        st.success(f"✅ Extracted {len(parsed_data['skills'])} skills!")
+
+                    if parsed_data['languages']:
+                        st.session_state['parsed_languages'] = '\n'.join(parsed_data['languages'])
+                        st.success(f"✅ Found {len(parsed_data['languages'])} languages!")
+
+                    if parsed_data['contact'].get('email'):
+                        st.info(f"📧 Email found: {parsed_data['contact']['email']}")
+
+                    st.success("🎉 CV parsed successfully! Review and edit the information below.")
+
+                except Exception as e:
+                    st.error(f"Failed to parse CV: {e}")
+                    import traceback
+                    with st.expander("Error Details"):
+                        st.code(traceback.format_exc())
+
+        st.divider()
+
+        # Initialize session state for experiences and education
+        if 'profile_experiences' not in st.session_state:
+            st.session_state['profile_experiences'] = []
+        if 'profile_education' not in st.session_state:
+            st.session_state['profile_education'] = []
+
+        # Skills Section
+        st.write("### 1. Skills")
+        # Pre-fill with parsed skills if available
+        default_skills = st.session_state.get('parsed_skills', '')
+        skills_input = st.text_area(
+            "Enter your skills (one per line)",
+            value=default_skills,
+            placeholder="Python\nMachine Learning\nReact\nSQL",
+            height=100,
+            key="skills_input"
+        )
+
+        st.divider()
+
+        # Experience Section
+        st.write("### 2. Experience")
+
+        # Display existing experiences
+        if st.session_state['profile_experiences']:
+            for i, exp in enumerate(st.session_state['profile_experiences']):
+                with st.expander(f"📋 {exp['title']} at {exp['company']}", expanded=False):
+                    st.write(f"**Duration:** {exp.get('duration', 'N/A')}")
+                    st.write(f"**Description:** {exp.get('description', 'N/A')}")
+                    if st.button(f"Remove", key=f"remove_exp_{i}"):
+                        st.session_state['profile_experiences'].pop(i)
+                        st.rerun()
+
+        # Add new experience
+        with st.expander("➕ Add New Experience", expanded=True):
+            exp_title = st.text_input("Job Title", key="new_exp_title")
+            exp_company = st.text_input("Company", key="new_exp_company")
+            exp_duration = st.text_input("Duration", placeholder="Jan 2024 - Jun 2024", key="new_exp_duration")
+            exp_description = st.text_area("Description (Optional)", placeholder="Describe your responsibilities and achievements", key="new_exp_desc")
+
+            if st.button("Add Experience"):
                 if exp_title and exp_company:
-                    experience.append({
+                    st.session_state['profile_experiences'].append({
                         'title': exp_title,
                         'company': exp_company,
-                        'duration': exp_duration
+                        'duration': exp_duration,
+                        'description': exp_description
                     })
+                    st.success(f"Added: {exp_title} at {exp_company}")
+                    st.rerun()
+                else:
+                    st.error("Please enter at least job title and company")
 
-                education = {}
+        st.divider()
+
+        # Education Section
+        st.write("### 3. Education")
+
+        # Display existing education
+        if st.session_state['profile_education']:
+            for i, edu in enumerate(st.session_state['profile_education']):
+                with st.expander(f"🎓 {edu['degree']} - {edu['institution']}", expanded=False):
+                    st.write(f"**Year:** {edu.get('year', 'N/A')}")
+                    st.write(f"**Field:** {edu.get('field', 'N/A')}")
+                    if st.button(f"Remove", key=f"remove_edu_{i}"):
+                        st.session_state['profile_education'].pop(i)
+                        st.rerun()
+
+        # Add new education
+        with st.expander("➕ Add New Education", expanded=True):
+            edu_degree = st.text_input("Degree", placeholder="Master in Computer Science", key="new_edu_degree")
+            edu_institution = st.text_input("Institution", placeholder="University of Paris", key="new_edu_institution")
+            edu_year = st.number_input("Graduation Year", min_value=1990, max_value=2030, value=2024, key="new_edu_year")
+            edu_field = st.text_input("Field of Study (Optional)", placeholder="Artificial Intelligence", key="new_edu_field")
+
+            if st.button("Add Education"):
                 if edu_degree and edu_institution:
-                    education = {
+                    st.session_state['profile_education'].append({
                         'degree': edu_degree,
                         'institution': edu_institution,
-                        'year': edu_year
-                    }
+                        'year': edu_year,
+                        'field': edu_field
+                    })
+                    st.success(f"Added: {edu_degree} from {edu_institution}")
+                    st.rerun()
+                else:
+                    st.error("Please enter at least degree and institution")
 
+        st.divider()
+
+        # Languages Section
+        st.write("### 4. Languages")
+        # Pre-fill with parsed languages if available
+        default_languages = st.session_state.get('parsed_languages', '')
+        languages_input = st.text_area(
+            "Languages (one per line)",
+            value=default_languages,
+            placeholder="English (Fluent)\nFrench (Native)\nSpanish (Intermediate)",
+            height=80,
+            key="languages_input"
+        )
+
+        st.divider()
+
+        # Create Profile Button
+        if st.button("✅ Create Profile", type="primary", use_container_width=True):
+            # Parse inputs
+            skills = [s.strip() for s in skills_input.split('\n') if s.strip()]
+            languages = [l.strip() for l in languages_input.split('\n') if l.strip()]
+
+            # Validation
+            if not skills:
+                st.error("Please add at least one skill")
+            elif not st.session_state['profile_experiences']:
+                st.error("Please add at least one experience")
+            elif not st.session_state['profile_education']:
+                st.error("Please add at least one education entry")
+            else:
                 profile_data = {
                     'skills': skills,
-                    'experience': experience,
-                    'education': education,
+                    'experience': st.session_state['profile_experiences'],
+                    'education': st.session_state['profile_education'],
                     'languages': languages
                 }
 
@@ -262,6 +394,13 @@ def show_profile_page():
                 try:
                     db_manager.create_profile(user['id'], profile_data)
                     st.success("Profile created successfully!")
+                    # Clear session state
+                    del st.session_state['profile_experiences']
+                    del st.session_state['profile_education']
+                    if 'parsed_skills' in st.session_state:
+                        del st.session_state['parsed_skills']
+                    if 'parsed_languages' in st.session_state:
+                        del st.session_state['parsed_languages']
                     st.rerun()
                 except Exception as e:
                     st.error(f"Failed to create profile: {e}")
@@ -275,10 +414,17 @@ def show_profile_page():
                 st.write("**Experience:**")
                 for exp in profile['experience']:
                     st.write(f"- {exp.get('title')} at {exp.get('company')} ({exp.get('duration', 'N/A')})")
+                    if exp.get('description'):
+                        st.caption(f"  {exp['description'][:100]}...")
 
             if profile.get('education'):
-                edu = profile['education']
-                st.write(f"**Education:** {edu.get('degree')} from {edu.get('institution')} ({edu.get('year')})")
+                st.write("**Education:**")
+                # Handle both dict (old format) and list (new format)
+                edu_list = profile['education'] if isinstance(profile['education'], list) else [profile['education']]
+                for edu in edu_list:
+                    st.write(f"- {edu.get('degree')} from {edu.get('institution')} ({edu.get('year')})")
+                    if edu.get('field'):
+                        st.caption(f"  Field: {edu['field']}")
 
             if profile.get('languages'):
                 st.write("**Languages:**", ', '.join(profile['languages']))
@@ -554,6 +700,12 @@ def show_results_page():
         st.session_state['show_cv_generator'] = True
         st.rerun()
 
+    def handle_generate_cover_letter(job):
+        """Handle cover letter generation for a job."""
+        st.session_state['selected_job_for_cover_letter'] = job
+        st.session_state['show_cover_letter_generator'] = True
+        st.rerun()
+
     def handle_view_details(job):
         """Handle viewing job details."""
         st.session_state['selected_job_details'] = job
@@ -569,46 +721,141 @@ def show_results_page():
             use_llm = st.checkbox("Use LLM (Groq API)", value=False,
                                  help="Generate with AI (requires Groq API key)")
 
-            if st.button("Generate CV", type="primary"):
-                try:
-                    user = st.session_state.get('user')
-                    cv_prefs = st.session_state.get('cv_preferences', {
-                        'cv_length': 1,
-                        'include_projects': True,
-                        'max_projects_per_cv': 3
-                    })
+            col1, col2 = st.columns([1, 1])
 
-                    with st.spinner("Generating CV..."):
-                        from ai_generation.cv_generator import cv_generator
-                        cv_generator.initialize()
-
-                        cv_result = cv_generator.generate_cv(
-                            user_id=user['id'],
-                            job=job,
-                            cv_preferences=cv_prefs,
-                            use_llm=use_llm
-                        )
-
-                        st.success("✅ CV Generated!")
-                        st.text_area("CV Content", cv_result['content'], height=400)
-
-                        # Save to applications
-                        st.session_state['generated_cvs'] = st.session_state.get('generated_cvs', [])
-                        st.session_state['generated_cvs'].append({
-                            'job': job,
-                            'cv': cv_result,
-                            'generated_at': datetime.utcnow()
+            with col1:
+                if st.button("Generate CV", type="primary", use_container_width=True):
+                    try:
+                        user = st.session_state.get('user')
+                        cv_prefs = st.session_state.get('cv_preferences', {
+                            'cv_length': 1,
+                            'include_projects': True,
+                            'max_projects_per_cv': 3
                         })
 
-                except Exception as e:
-                    st.error(f"Failed to generate CV: {e}")
-                    import traceback
-                    with st.expander("Error Details"):
-                        st.code(traceback.format_exc())
+                        with st.spinner("Generating CV..."):
+                            from ai_generation.cv_generator import cv_generator
+                            cv_generator.initialize()
 
-            if st.button("Close"):
-                st.session_state['show_cv_generator'] = False
-                st.rerun()
+                            cv_result = cv_generator.generate_cv(
+                                user_id=user['id'],
+                                job=job,
+                                cv_preferences=cv_prefs,
+                                use_llm=use_llm
+                            )
+
+                            st.success("✅ CV Generated!")
+                            st.text_area("CV Content", cv_result['content'], height=400)
+
+                            # Convert to PDF
+                            from output.pdf_converter import pdf_converter
+                            pdf_path = pdf_converter.convert_cv_to_pdf(
+                                cv_content=cv_result['content'],
+                                job_title=job.get('job_title', 'Job'),
+                                company_name=job.get('company_name', 'Company'),
+                                cv_length=cv_prefs.get('cv_length', 1)
+                            )
+
+                            # Download button for PDF
+                            with open(pdf_path, 'rb') as pdf_file:
+                                st.download_button(
+                                    label="📥 Download PDF",
+                                    data=pdf_file.read(),
+                                    file_name=pdf_path.name,
+                                    mime='application/pdf',
+                                    use_container_width=True
+                                )
+
+                            # Save to applications
+                            from datetime import datetime
+                            st.session_state['generated_cvs'] = st.session_state.get('generated_cvs', [])
+                            st.session_state['generated_cvs'].append({
+                                'job': job,
+                                'cv': cv_result,
+                                'pdf_path': str(pdf_path),
+                                'generated_at': datetime.utcnow()
+                            })
+
+                    except Exception as e:
+                        st.error(f"Failed to generate CV: {e}")
+                        import traceback
+                        with st.expander("Error Details"):
+                            st.code(traceback.format_exc())
+
+            with col2:
+                if st.button("Close", use_container_width=True):
+                    st.session_state['show_cv_generator'] = False
+                    st.rerun()
+
+    # Show Cover Letter generator if triggered
+    if st.session_state.get('show_cover_letter_generator'):
+        job = st.session_state.get('selected_job_for_cover_letter')
+
+        with st.expander("✉️ Generate Cover Letter", expanded=True):
+            st.write(f"**Generating Cover Letter for:** {job.get('job_title')} at {job.get('company_name')}")
+
+            use_llm = st.checkbox("Use LLM (Groq API)", value=False, key="cover_letter_llm",
+                                 help="Generate with AI (requires Groq API key)")
+
+            col1, col2 = st.columns([1, 1])
+
+            with col1:
+                if st.button("Generate Cover Letter", type="primary", use_container_width=True):
+                    try:
+                        user = st.session_state.get('user')
+
+                        with st.spinner("Generating Cover Letter..."):
+                            from ai_generation.cover_letter_generator import cover_letter_generator
+                            cover_letter_generator.initialize()
+
+                            letter_result = cover_letter_generator.generate_cover_letter(
+                                user_id=user['id'],
+                                job=job,
+                                use_llm=use_llm
+                            )
+
+                            st.success("✅ Cover Letter Generated!")
+                            st.text_area("Cover Letter Content", letter_result['content'], height=400, key="cover_letter_content")
+
+                            # Convert to PDF
+                            from output.pdf_converter import pdf_converter
+                            pdf_path = pdf_converter.convert_cover_letter_to_pdf(
+                                letter_content=letter_result['content'],
+                                job_title=job.get('job_title', 'Job'),
+                                company_name=job.get('company_name', 'Company')
+                            )
+
+                            # Download button for PDF
+                            with open(pdf_path, 'rb') as pdf_file:
+                                st.download_button(
+                                    label="📥 Download PDF",
+                                    data=pdf_file.read(),
+                                    file_name=pdf_path.name,
+                                    mime='application/pdf',
+                                    use_container_width=True,
+                                    key="download_cover_letter"
+                                )
+
+                            # Save to applications
+                            from datetime import datetime
+                            st.session_state['generated_cover_letters'] = st.session_state.get('generated_cover_letters', [])
+                            st.session_state['generated_cover_letters'].append({
+                                'job': job,
+                                'cover_letter': letter_result,
+                                'pdf_path': str(pdf_path),
+                                'generated_at': datetime.utcnow()
+                            })
+
+                    except Exception as e:
+                        st.error(f"Failed to generate cover letter: {e}")
+                        import traceback
+                        with st.expander("Error Details"):
+                            st.code(traceback.format_exc())
+
+            with col2:
+                if st.button("Close", use_container_width=True, key="close_cover_letter"):
+                    st.session_state['show_cover_letter_generator'] = False
+                    st.rerun()
 
     # Show job details modal if triggered
     if st.session_state.get('selected_job_details'):
@@ -670,6 +917,7 @@ def show_results_page():
         jobs=filtered_results,
         show_actions=True,
         on_generate_cv=handle_generate_cv,
+        on_generate_cover_letter=handle_generate_cover_letter,
         on_view_details=handle_view_details
     )
 
@@ -1058,14 +1306,35 @@ def show_settings_page():
     from database.db_manager import db_manager
 
     with st.form("cv_preferences"):
-        cv_length = st.selectbox("CV Length", [1, 2], index=0)
-        include_projects = st.checkbox("Include Projects in CV", value=True)
-        max_projects = st.slider("Max Projects per CV", 1, 5, 3)
+        col1, col2 = st.columns(2)
 
-        save_prefs = st.form_submit_button("Save Preferences")
+        with col1:
+            cv_length = st.selectbox("CV Length (pages)", [1, 2], index=0)
+            include_projects = st.checkbox("Include Projects in CV", value=True)
+
+        with col2:
+            cv_language = st.selectbox(
+                "CV Language",
+                ["English", "French"],
+                index=0,
+                help="Language for CV generation"
+            )
+            max_projects = st.slider("Max Projects per CV", 1, 5, 3)
+
+        save_prefs = st.form_submit_button("Save Preferences", type="primary", use_container_width=True)
 
         if save_prefs:
-            st.success("CV preferences saved!")
+            # Map language to code
+            lang_map = {"English": "en", "French": "fr"}
+
+            st.session_state['cv_preferences'] = {
+                'cv_length': cv_length,
+                'include_projects': include_projects,
+                'max_projects_per_cv': max_projects,
+                'language': lang_map[cv_language]
+            }
+
+            st.success(f"✅ CV preferences saved! Language: {cv_language}")
 
 
 def main():
